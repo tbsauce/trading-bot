@@ -1,7 +1,7 @@
 import requests
 import matplotlib.pyplot as plt
 
-url = "https://data.alpaca.markets/v2/stocks/bars?symbols=AAPL%2CTSLA&timeframe=15Min&start=2022-01-03T00%3A00%3A00Z&end=2022-01-04T00%3A00%3A00Z&limit=1000&adjustment=raw&feed=sip&sort=asc"
+url = "https://data.alpaca.markets/v2/stocks/bars?symbols=TSLA&timeframe=1Min&start=2024-01-04T09%3A30%3A00Z&end=2024-01-04T10%3A00%3A00Z&limit=1000&adjustment=raw&feed=sip&sort=asc"
 headers = {
     "accept": "application/json",
     "APCA-API-KEY-ID": "PKIPW6JUBW9OS2K4IHB2",
@@ -16,7 +16,7 @@ if response.status_code != 200:
 json_data = response.json()
 
 # Assuming you have already obtained the AAPL stock data
-aapl_data = json_data['bars']['AAPL']
+aapl_data = json_data['bars']['TSLA']
 
 # Extracting closing times and values
 closing_times = [data_point['t'] for data_point in aapl_data]
@@ -56,7 +56,7 @@ else:
 # Plotting the closing values over time
 plt.figure(figsize=(10, 6))
 plt.plot(closing_times, closing_values, marker='o', linestyle='-')
-plt.title('AAPL Closing Prices on Jan 3rd, 2022')
+plt.title('TSLA Closing Prices on Jan 3rd, 2022')
 plt.xlabel('Time')
 plt.ylabel('Closing Price ($)')
 plt.xticks(rotation=45)
