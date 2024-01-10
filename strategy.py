@@ -67,27 +67,30 @@ df['middle_band'] = ((df['upper_band'] + df['lower_band']) / 2)
 
 df_lwti = analyze_lwti_indicator(df['c'])
 
+# Calculate Volume Moving Average (VMA)
+n = 10  # Number of periods for VMA calculation
+df['VolumeMA'] = df['v'].rolling(window=n).mean()
+
 # Filter data for the specified time range (9:30 AM to 10:00 AM)
-# start_time = '10:00:00'
-# end_time = '12:00:00'
-# filtered_df = df.between_time(start_time, end_time)
-# df_lwti = df_lwti.between_time(start_time, end_time)
-filtered_df = df
+start_time = '10:00:00'
+end_time = '12:00:00'
+df = df.between_time(start_time, end_time)
+df_lwti = df_lwti.between_time(start_time, end_time)
 
 # Initialize lists for buy/sell signals and stop-loss values
 buy_sell_signals = []
 buy = 1
 buy_value = 0
-sell_down = sell_up = filtered_df['middle_band'][0]
+sell_down = sell_up = df['middle_band'][0]
 sell_down_values = []
 sell_up_values = []
 
 
-for i in range(len(filtered_df['upper_band'])):
-    closing_cost = filtered_df['c'].iloc[i]
-    middle_band = filtered_df['middle_band'].iloc[i]
-    upper_band = filtered_df['upper_band'].iloc[i]
-    if upper_band <= closing_cost and df_lwti['BullishValue'].iloc[i] > 50:
+for i in range(len(df['upper_band'])):
+    closing_cost = df['c'].iloc[i]
+    middle_band = df['middle_band'].iloc[i]
+    upper_band = df['upper_band'].iloc[i]
+    if upper_band <= closing_cost and df_lwti['BullishValue'].iloc[i] > 50 and df['v'].iloc[i] >= df['VolumeMA'].iloc[i]:
         
         buy_value = closing_cost
         #Sell values
@@ -124,18 +127,18 @@ plt.figure(figsize=(15, 6))
 
 # Plotting the TSLA stock price with upper band, buy/sell signals, and stop-loss values
 plt.subplot(1, 2, 1)  # Subplot 1
-plt.plot(filtered_df['c'], label='Closing Price', color='blue')
-plt.plot(filtered_df['upper_band'], label='Upper Band', linestyle='--', color='blue')
+plt.plot(df['c'], label='Closing Price', color='blue')
+plt.plot(df['upper_band'], label='Upper Band', linestyle='--', color='blue')
 
 # Plot buy signals (upper arrows)
-plt.scatter(filtered_df.index[buy_signals], filtered_df['c'][buy_signals], marker='^', color='green', label='Buy Signal')
+plt.scatter(df.index[buy_signals], df['c'][buy_signals], marker='^', color='green', label='Buy Signal')
 
 # Plot sell signals (lower flags)
-plt.scatter(filtered_df.index[sell_signals], filtered_df['c'][sell_signals], marker='v', color='red', label='Sell Signal')
+plt.scatter(df.index[sell_signals], df['c'][sell_signals], marker='v', color='red', label='Sell Signal')
 
 # Plot stop loss lines
-plt.plot(filtered_df.index, sell_down_values, label='Sell Down', color='red', linestyle='--')
-plt.plot(filtered_df.index, sell_up_values, label='Sell Up', color='green', linestyle='--')
+plt.plot(df.index, sell_down_values, label='Sell Down', color='red', linestyle='--')
+plt.plot(df.index, sell_up_values, label='Sell Up', color='green', linestyle='--')
 
 plt.title('TSLA Stock Price with Buy/Sell Signals and Stop Loss (9:00 AM to 11:00 AM)')
 plt.xlabel('Time')

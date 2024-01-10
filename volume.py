@@ -39,6 +39,9 @@ plt.bar(df.index, df['v'], color='blue', alpha=0.5, label='Volume')
 # Plot Volume Moving Average (VMA)
 plt.plot(df.index, df['VolumeMA'], color='red', label='Volume Moving Average (VMA)')
 
+# Highlight bars where volume is below VMA
+plt.bar(df.index[df['v'] < df['VolumeMA']], df['v'][df['v'] < df['VolumeMA']], color='yellow', alpha=0.5, label='Volume Below VMA')
+
 plt.title('Volume and Volume Moving Average (VMA)')
 plt.xlabel('Date')
 plt.ylabel('Volume')
