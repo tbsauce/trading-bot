@@ -3,16 +3,26 @@ import matplotlib.pyplot as plt
 
 bot = Bot()
 
-data = bot.get_historical_data("TSLA", "1Min", "2022-01-03T00:00:00Z", "2022-01-03T11:30:00Z", "sip")
+symbol = "TSLA"
+time_frame = "1Min"
+start_date = "2022-04-11T09:00:00Z"
+end_date = "2022-04-11T11:30:00Z"
+feed = "sip"
 
-df = bot.get_volume(data)
+data = bot.get_historical_data(symbol, time_frame, start_date, end_date, feed)
 
-# Plotting the closing values over time
-temp_positive = df['volume_adjusted'].abs()
-plt.bar(data['t'], temp_positive, color=['g' if x >= 0 else 'r' for x in df['volume_adjusted']])
-plt.title('TSLA Closing Prices')
+data_channel = bot.get_donchian_channel(20, symbol, time_frame, start_date, end_date, feed)
+
+plt.figure(figsize=(10, 6))
+plt.plot(data['t'], data['c'], marker='o', linestyle='-')
+
+plt.plot(data['t'], data_channel['upper_band'], label='Upper Band', linestyle='--', color='red')
+plt.plot(data['t'], data_channel['middle_band'], label='Middle Band', linestyle='--', color='red')
+plt.plot(data['t'], data_channel['lower_band'], label='Lower Band', linestyle='--', color='red')
+
 plt.xlabel('Time')
-plt.ylabel('Closing Price ($)')
+plt.ylabel('Closing Price')
 plt.xticks(rotation=90)
 plt.tight_layout()
 plt.show()
+
