@@ -21,43 +21,53 @@ class Bot:
 
         response = requests.get(url, headers=self.headers)
 
-
+        #Catch Errors
         if response.status_code != 200:
             print("Request failed with status code:", response.status_code)
             exit(1)
 
-        json_data = response.json()[0]
+        data = response.json()[0]
 
-        return json_data["open"], json_data["close"]
+        return data["open"], data["close"]
 
 
     def get_historical_data(self, symbol ,time_frame, start, end, feed):
 
         page_token = 0
-        json_data = []
+        data = []
         while True:
 
             if page_token == 0:
-                url = f"https://data.alpaca.markets/v2/stocks/bars?symbols={symbol}&timeframe={time_frame}Min&start={start}&end={end}&adjustment=raw&feed={feed}&sort=asc"
+                url = f"https://data.alpaca.markets/v2/stocks/bars?symbols={symbol}&timeframe={time_frame}&start={start}&end={end}&adjustment=raw&feed={feed}&sort=asc"
             elif page_token == None:
                 break
             else:
-                url = f"https://data.alpaca.markets/v2/stocks/bars?symbols={symbol}&timeframe={time_frame}Min&start={start}&end={end}&adjustment=raw&feed={feed}&page_token={page_token}&sort=asc"
+                url = f"https://data.alpaca.markets/v2/stocks/bars?symbols={symbol}&timeframe={time_frame}&start={start}&end={end}&adjustment=raw&feed={feed}&page_token={page_token}&sort=asc"
         
             response = requests.get(url, headers=self.headers)
 
+            #Catch Errors
             if response.status_code != 200:
                 print("Request failed with status code:", response.status_code)
             
             # Extracting data
-            tmp_json_data = response.json()
-            page_token = tmp_json_data['next_page_token']
+            tmp_data = response.json()
+            page_token = tmp_data['next_page_token']
 
-            if 'message' in tmp_json_data:
-                print(tmp_json_data)
+            #Catch Formatation Errors
+            if 'message' in tmp_data:
+                print(tmp_data)
                 exit(1)
 
             
-            json_data.extend(tmp_json_data['bars'][symbol])
+            data.extend(tmp_data['bars'][symbol])
 
-        return pd.DataFrame(json_data)
+        return pd.DataFrame(data)
+        
+    def get_donchian_channel(self, df):
+        n_period = 10 
+        df['upper_band'] = df['c'].rolling(window=n_period).max().shift(1)
+        df['lower_band'] = df['c'].rolling(window=n_period).min().shift(1)
+        df['middle_band'] = ((df['upper_band'] + df['lower_band']) / 2)
+
+        return df
