@@ -15,6 +15,20 @@ class Bot:
             "APCA-API-KEY-ID": os.environ.get("KEY_ID"),
             "APCA-API-SECRET-KEY": os.environ.get("SECRET_KEY")
         }
+    
+    def get_live_data(self):
+        url = "https://data.alpaca.markets/v2/stocks/bars/latest?symbols=TSLA&feed=iex"
+
+
+        response = requests.get(url, headers=self.headers)
+
+        if response.status_code != 200:
+            print("Request failed with status code:", response.status_code)
+            return
+
+        data = response.json()
+        
+        return pd.DataFrame(data)
 
     def get_market_time(self, day):
         url = f"https://paper-api.alpaca.markets/v2/calendar?start={day}&end={day}"
@@ -64,10 +78,31 @@ class Bot:
 
         return pd.DataFrame(data)
         
-    def get_donchian_channel(self, df):
-        n_period = 10 
-        df['upper_band'] = df['c'].rolling(window=n_period).max().shift(1)
-        df['lower_band'] = df['c'].rolling(window=n_period).min().shift(1)
+    def get_donchian_channel(self, df, n_period): 
+        #shift?
+        # df['upper_band'] = df['c'].rolling(window=n_period).max().shift(1)
+        df['highest_high'] = df['c'].rolling(window=n_period).max().shift(1)
+        df['lowest_low'] = df['c'].rolling(window=n_period).min().shift(1)
         df['middle_band'] = ((df['upper_band'] + df['lower_band']) / 2)
 
         return df
+
+    def get_williams_r(self, df, n_period):
+        
+        df['highest_high'] = df['c'].rolling(window=n_period).max()
+        df['lowest_low'] = df['c'].rolling(window=n_period).min()
+        williams_r = ((df['highest_high']  - df['c']) / (df['highest_high']  - df['lowest_low'])) * -100
+
+        df['WilliamsR'] = williams_r
+
+        return df
+
+    def get_volume(self, df):
+        df['volume_adjusted'] = df['v']
+        df.loc[df['c'] < df['c'].shift(1), 'volume_adjusted'] *= -1
+        return df
+
+
+
+
+
