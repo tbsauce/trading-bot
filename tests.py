@@ -12,22 +12,22 @@ feed = "sip"
 data = bot.get_historical_data(symbol, time_frame, start_date, end_date, feed)
 
 # Donchian Channel
-data_donchian_channels = bot.get_donchian_channel(20, symbol, time_frame, start_date, end_date, feed)
+# data_donchian_channels = bot.get_donchian_channel(20, symbol, time_frame, start_date, end_date, feed)
 
-plt.figure(figsize=(10, 6))
-plt.plot(data['t'], data['c'], marker='o', linestyle='-')
-plt.plot(data['t'], data_donchian_channels['upper_band'], label='Upper Band', linestyle='--', color='red')
-plt.plot(data['t'], data_donchian_channels['middle_band'], label='Middle Band', linestyle='--', color='red')
-plt.plot(data['t'], data_donchian_channels['lower_band'], label='Lower Band', linestyle='--', color='red')
-plt.xlabel('Time')
-plt.ylabel('Closing Price')
-plt.xticks(rotation=90)
-plt.tight_layout()
-plt.show()
+# plt.figure(figsize=(10, 6))
+# plt.plot(data['t'], data['c'], marker='o', linestyle='-')
+# plt.plot(data['t'], data_donchian_channels['upper_band'], label='Upper Band', linestyle='--', color='red')
+# plt.plot(data['t'], data_donchian_channels['middle_band'], label='Middle Band', linestyle='--', color='red')
+# plt.plot(data['t'], data_donchian_channels['lower_band'], label='Lower Band', linestyle='--', color='red')
+# plt.xlabel('Time')
+# plt.ylabel('Closing Price')
+# plt.xticks(rotation=90)
+# plt.tight_layout()
+# plt.show()
 
 
 #Volume Bars
-data_volume = bot.get_volume(data)
+# data_volume = bot.get_volume(data)
 
 # temp_positive = data_volume['volume_adjusted'].abs()
 # plt.bar(data_volume['t'], temp_positive, color=['g' if x >= 0 else 'r' for x in data_volume['volume_adjusted']])
@@ -39,7 +39,7 @@ data_volume = bot.get_volume(data)
 
 
 # Williams %R
-data_williams_r = bot.get_williams_r(data, 14)
+# data_williams_r = bot.get_williams_r(14, symbol, time_frame, start_date, end_date, feed)
 
 # plt.figure(figsize=(10, 6))
 # plt.plot(data_williams_r['t'], data_williams_r['WilliamsR'], linestyle='-')

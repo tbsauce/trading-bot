@@ -103,15 +103,27 @@ class Bot:
 
         return df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
 
-    def get_williams_r(self, df, n_period):
+    def get_williams_r(self, n_period, symbol ,time_frame, start_date, end_date, feed):
         
+        #Save Start Date
+        middle_date = start_date
+        
+        #Calculate New Start Date
+        days_to_add = 2
+        original_date = datetime.fromisoformat(start_date)
+        start_date = original_date - timedelta(days=days_to_add)
+        start_date = start_date.replace(tzinfo=None).isoformat() + "Z"
+
+        #Get Historical Data
+        df = self.get_historical_data(symbol, time_frame, start_date, end_date, feed)
+
         df['highest_high'] = df['h'].rolling(window=n_period).max()
         df['lowest_low'] = df['l'].rolling(window=n_period).min()
         williams_r = ((df['highest_high']  - df['c']) / (df['highest_high']  - df['lowest_low'])) * -100
 
         df['WilliamsR'] = williams_r
 
-        return df
+        return df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
 
     def get_volume(self, df):
         df['volume_adjusted'] = df['v']
