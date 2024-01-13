@@ -107,7 +107,7 @@ class Bot:
         
         #Save Start Date
         middle_date = start_date
-        
+
         #Calculate New Start Date
         days_to_add = 2
         original_date = datetime.fromisoformat(start_date)
@@ -126,8 +126,10 @@ class Bot:
         return df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
 
     def get_volume(self, df):
+
         df['volume_adjusted'] = df['v']
         df.loc[df['c'] < df['c'].shift(1), 'volume_adjusted'] *= -1
+        
         return df
 
 
