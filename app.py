@@ -6,14 +6,14 @@ bot = Bot()
 symbol = "TSLA"
 time_frame = "1Min"
 #bearsih market
-# start_date = "2022-05-11T09:00:00Z"
-# end_date = "2022-05-12T11:30:00Z"
+start_date = "2022-05-11T09:00:00Z"
+end_date = "2022-05-12T11:30:00Z"
 #Bullish market
 # start_date = "2022-10-12T09:00:00Z"
 # end_date = "2022-10-12T11:30:00Z"
 
-start_date = "2022-05-03T09:00:00Z"
-end_date = "2022-05-04T11:30:00Z"
+# start_date = "2022-04-03T09:00:00Z"
+# end_date = "2022-05-04T11:30:00Z"
 
 feed = "sip"
 
@@ -24,6 +24,9 @@ data_donchian_channels = bot.get_donchian_channel(25, symbol, time_frame, start_
 
 # Volume Bars
 data_volume = bot.get_volume(data)
+
+# Volume MA
+data_vma = bot.get_volume_moving_average(25, symbol, time_frame, start_date, end_date, feed)
 
 # Williams %R
 data_williams_r = bot.get_williams_r(14, symbol, time_frame, start_date, end_date, feed)
@@ -45,23 +48,27 @@ for i in range(len(data['c'])):
     if not buy and (sell_up <= closing or closing <= sell_down):
         signals.append(-1 * closing)
         buy = 1
-    elif upper <= closing and data_volume['volume_bars'].iloc[i] > 0 and data_volume['volume_bars'].iloc[i -1] and data_volume['volume_bars'].iloc[i] > data_volume['volume_bars'].iloc[i-1] and data_williams_r['WilliamsR'].iloc[i] >= -20:
+    elif (buy and upper <= closing and 
+        data_volume['volume_bars'].iloc[i] > 0 and data_volume['volume_bars'].iloc[i -1] > 0 and
+        data_vma['volume_ma'].iloc[i] < data_volume['volume_bars'].iloc[i] and
+        data_vma['volume_ma'].iloc[i-1] < data_volume['volume_bars'].iloc[i-1] and
+        data_volume['volume_bars'].iloc[i] > data_volume['volume_bars'].iloc[i-1] and 
+        data_williams_r['WilliamsR'].iloc[i] >= -20):
         buy_value = closing
         sell_down = closing - (closing * 0.001)
-        #muda tbm? ou n?
-        # sell_up = closing + (closing * 0.001)
-
-        if buy:
-            sell_up = closing + (closing * 0.001)
-            signals.append(closing)
-            buy = 0
-        else:
-            signals.append(0)
+        sell_up = closing + (closing * 0.001)
+        signals.append(closing)
+        buy = 0
     else:
         signals.append(0)
+        
+    tmp = closing - (closing * 0.001)
 
     if sell_down < middle:
         sell_down = middle
+    if not buy and sell_down < tmp:
+        sell_down = tmp
+
         
     sell_down_values.append(sell_down)
     sell_up_values.append(sell_up)
@@ -75,6 +82,7 @@ print("Winning Trades:", trade_stats['winning_trades'])
 print("Losing Trades:", trade_stats['losing_trades'])
 print("Winning Percentage:", trade_stats['winning_percentage'], "%")
 
+# exit(1)
 # Graph
 fig, axs = plt.subplots(3, 1, figsize=(10, 18))
 
@@ -97,6 +105,7 @@ axs[0].legend()
 # Plot Volume Bars
 temp_positive = data_volume['volume_bars'].abs()
 axs[1].bar(data_volume['t'], temp_positive, color=['g' if x >= 0 else 'r' for x in data_volume['volume_bars']])
+axs[1].plot(data['t'], data_vma['volume_ma'], linestyle='--', label='ma', color='blue')
 axs[1].set_xlabel('Time')
 axs[1].set_ylabel('Volume')
 axs[1].set_xticks([])

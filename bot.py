@@ -131,6 +131,24 @@ class Bot:
         df.loc[df['c'] < df['c'].shift(1), 'volume_bars'] *= -1
         
         return df
+    
+    def get_volume_moving_average(self, n_period, symbol ,time_frame, start_date, end_date, feed):
+
+        #Save Start Date
+        middle_date = start_date
+
+        #Calculate New Start Date
+        days_to_add = 2
+        original_date = datetime.fromisoformat(start_date)
+        start_date = original_date - timedelta(days=days_to_add)
+        start_date = start_date.replace(tzinfo=None).isoformat() + "Z"
+
+        #Get Historical Data
+        df = self.get_historical_data(symbol, time_frame, start_date, end_date, feed)
+
+        df['volume_ma'] = df['v'].rolling(window=n_period).mean()
+
+        return df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
 
     def calculate_trade_stats(self, signals):
         total_profit_loss = 0
