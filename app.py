@@ -59,7 +59,7 @@ for i in range(len(data['c'])):
         data_williams_r['WilliamsR'].iloc[i] >= -20):
         buy_value = closing
         sell_down = closing - (closing * 0.001)
-        sell_up = closing + (closing * 0.001)
+        sell_up = closing + (closing * 0.002)
         signals.append(closing)
         buy = 0
     else:
