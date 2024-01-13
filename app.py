@@ -5,8 +5,16 @@ bot = Bot()
 
 symbol = "TSLA"
 time_frame = "1Min"
-start_date = "2022-05-12T09:00:00Z"
-end_date = "2022-05-12T11:30:00Z"
+#bearsih market
+# start_date = "2022-05-11T09:00:00Z"
+# end_date = "2022-05-12T11:30:00Z"
+#Bullish market
+# start_date = "2022-10-12T09:00:00Z"
+# end_date = "2022-10-12T11:30:00Z"
+
+start_date = "2022-05-03T09:00:00Z"
+end_date = "2022-05-04T11:30:00Z"
+
 feed = "sip"
 
 data = bot.get_historical_data(symbol, time_frame, start_date, end_date, feed)
@@ -37,7 +45,7 @@ for i in range(len(data['c'])):
     if not buy and (sell_up <= closing or closing <= sell_down):
         signals.append(-1 * closing)
         buy = 1
-    elif upper <= closing:
+    elif upper <= closing and data_volume['volume_bars'].iloc[i] > 0 and data_volume['volume_bars'].iloc[i -1] and data_volume['volume_bars'].iloc[i] > data_volume['volume_bars'].iloc[i-1] and data_williams_r['WilliamsR'].iloc[i] >= -20:
         buy_value = closing
         sell_down = closing - (closing * 0.001)
         #muda tbm? ou n?
@@ -58,14 +66,16 @@ for i in range(len(data['c'])):
     sell_down_values.append(sell_down)
     sell_up_values.append(sell_up)
 
-# Convert the list to a NumPy array
-signals = np.array(signals)
 
-sell_signals = signals < 0
-buy_signals = signals > 0
+# Statistics
+trade_stats = bot.calculate_trade_stats(signals)
+print("Total Profit/Loss:", trade_stats['total_profit_loss'])
+print("Total Trades:", trade_stats['num_trades'])
+print("Winning Trades:", trade_stats['winning_trades'])
+print("Losing Trades:", trade_stats['losing_trades'])
+print("Winning Percentage:", trade_stats['winning_percentage'], "%")
 
-
-# Create a single figure with three subplots
+# Graph
 fig, axs = plt.subplots(3, 1, figsize=(10, 18))
 
 # Plot Donchian Channel
@@ -74,6 +84,9 @@ axs[0].plot(data['t'], data_donchian_channels['upper_band'], label='Upper Band',
 axs[0].plot(data['t'], data_donchian_channels['middle_band'], label='Middle Band', linestyle='--', color='blue')
 axs[0].plot(data['t'], sell_up_values, linestyle='--', label='Sell Up', color='green')
 axs[0].plot(data['t'], sell_down_values, linestyle='--', label='Sell Down', color='red')
+signals = np.array(signals)
+sell_signals = signals < 0
+buy_signals = signals > 0
 axs[0].scatter(data['t'][buy_signals], data['c'][buy_signals], marker='^', color='green', label='Buy Signal')
 axs[0].scatter(data['t'][sell_signals], data['c'][sell_signals], marker='v', color='red', label='Sell Signal')
 axs[0].set_xlabel('Time')
@@ -82,8 +95,8 @@ axs[0].set_xticks([])
 axs[0].legend()
 
 # Plot Volume Bars
-temp_positive = data_volume['volume_adjusted'].abs()
-axs[1].bar(data_volume['t'], temp_positive, color=['g' if x >= 0 else 'r' for x in data_volume['volume_adjusted']])
+temp_positive = data_volume['volume_bars'].abs()
+axs[1].bar(data_volume['t'], temp_positive, color=['g' if x >= 0 else 'r' for x in data_volume['volume_bars']])
 axs[1].set_xlabel('Time')
 axs[1].set_ylabel('Volume')
 axs[1].set_xticks([])

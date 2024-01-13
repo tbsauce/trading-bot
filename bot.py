@@ -127,11 +127,43 @@ class Bot:
 
     def get_volume(self, df):
 
-        df['volume_adjusted'] = df['v']
-        df.loc[df['c'] < df['c'].shift(1), 'volume_adjusted'] *= -1
+        df['volume_bars'] = df['v']
+        df.loc[df['c'] < df['c'].shift(1), 'volume_bars'] *= -1
         
         return df
 
+    def calculate_trade_stats(self, signals):
+        total_profit_loss = 0
+        winning_trades = 0
+        losing_trades = 0
+        buy_price = 0
+        num_trades = 0
+
+        # Remove all holds
+        signals = [value for value in signals if value != 0]
+
+        #get even size
+        size = len(signals)
+        if size % 2 != 0:
+            size = size - 1
+            
+        for i in range(0, size, 2):
+            profit = (signals[i + 1] * -1) - signals[i]
+            total_profit_loss += profit
+            if profit < 0:
+                losing_trades += 1
+            else:
+                winning_trades += 1
+            num_trades += 1
+        winning_percentage = (winning_trades / num_trades) * 100 if num_trades > 0 else 0
+
+        return {
+            'total_profit_loss': total_profit_loss,
+            'num_trades': num_trades,
+            'winning_trades': winning_trades,
+            'losing_trades': losing_trades,
+            'winning_percentage': round(winning_percentage, 2) if num_trades > 0 else 0
+        }
 
 
 
