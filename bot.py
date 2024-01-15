@@ -153,7 +153,9 @@ class Bot:
     def calculate_trade_stats(self, signals):
         total_profit_loss = 0
         winning_trades = 0
+        value_w = 0
         losing_trades = 0
+        value_l = 0
         buy_price = 0
         num_trades = 0
 
@@ -170,8 +172,10 @@ class Bot:
             total_profit_loss += profit
             if profit < 0:
                 losing_trades += 1
+                value_l += profit
             else:
                 winning_trades += 1
+                value_w += profit
             num_trades += 1
         winning_percentage = (winning_trades / num_trades) * 100 if num_trades > 0 else 0
 
@@ -179,7 +183,9 @@ class Bot:
             'total_profit_loss': total_profit_loss,
             'num_trades': num_trades,
             'winning_trades': winning_trades,
+            'value_of_winning_trades': value_w,
             'losing_trades': losing_trades,
+            'value_of_loosing_trades': value_l,
             'winning_percentage': round(winning_percentage, 2) if num_trades > 0 else 0
         }
 
