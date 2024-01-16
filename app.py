@@ -5,13 +5,11 @@ bot = Bot()
 
 symbol = "TSLA"
 time_frame = "5Min"
-#bearsih market
-start_date = "2021-11-01T09:00:00Z"
-end_date = "2023-11-30T11:30:00Z"
+start_date = "2024-01-01T09:00:00Z"
+end_date = "2024-01-30T11:30:00Z"
+feed = "iex"
 
-feed = "sip"
-
-data = bot.get_historical_data(symbol, time_frame, start_date, end_date, feed)
+data = bot.get_bars_data(symbol, time_frame, start_date, end_date, feed)
 
 # Donchian Channel
 data_donchian_channels = bot.get_donchian_channel(96, symbol, time_frame, start_date, end_date, feed)
@@ -35,11 +33,11 @@ sell_down_values = []
 sell_up_values = []
 
 for i in range(len(data['c'])):
+    print(data['t'].iloc[i])
     closing = data['c'].iloc[i]
     upper = data_donchian_channels['upper_band'].iloc[i]
     middle = data_donchian_channels['middle_band'].iloc[i]
 
-    
     good_to_buy = (upper <= closing and 
         data_volume['volume_bars'].iloc[i] > 0 and data_volume['volume_bars'].iloc[i -1] > 0 and
         data_vma['volume_ma'].iloc[i] < data_volume['volume_bars'].iloc[i] and
@@ -53,9 +51,10 @@ for i in range(len(data['c'])):
         sell_down = middle
         signals.append(closing)
         buy = 0
-    elif not buy and sell_up <= closing:
-        signals.append(-1 * sell_up)
-        buy = 1
+    # Tirar isto da bem mais profit 100 devia tirar falar com joao 
+    # elif not buy and sell_up <= closing:
+    #     signals.append(-1 * sell_up)
+    #     buy = 1
     elif not buy and closing <= sell_down:
         signals.append(-1 * sell_down)
         buy = 1
