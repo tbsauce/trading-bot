@@ -15,7 +15,59 @@ class Bot:
             "APCA-API-KEY-ID": os.environ.get("KEY_ID"),
             "APCA-API-SECRET-KEY": os.environ.get("SECRET_KEY")
         }
+    def get_account_balance(self):
 
+        url = "https://paper-api.alpaca.markets/v2/account"
+
+        response = requests.get(url, headers=self.headers)
+
+        return response.json()['portfolio_value']
+
+    def order_stock(self, symbol, qty, side, stop_price):
+        url = "https://paper-api.alpaca.markets/v2/orders"
+
+        order_params = {
+            "symbol": symbol,
+            "qty": qty,  # Number of shares to trade
+            "side": side,
+            "type": "market",  # Immediate market order
+            "stop_price": stop_price,  # Stop price for the stop-loss order
+            "time_in_force": "gtc",  # Good 'til Canceled
+        }
+
+        response = requests.post(url, json=order_params, headers=self.headers)
+
+        # Check the response
+        if response.status_code == 200:
+            print("Order placed successfully.")
+            print(response.json())
+        elif response.status_code == 403:
+            print("Forbidden: Buying power or shares are not sufficient.")
+        elif response.status_code == 422:
+            print("Unprocessable: Input parameters are not recognized.")
+        else:
+            print("Error:", response.status_code, response.text)
+    
+    def update_stock(self, id, stop_price):
+        url = f"https://paper-api.alpaca.markets/v2/orders/{id}"
+
+        order_params = {
+            "stop_price": stop_price,  # Stop price for the stop-loss order
+        }
+
+        response = requests.post(url, json=order_params, headers=self.headers)
+
+        # Check the response
+        if response.status_code == 200:
+            print("Order placed successfully.")
+            print(response.json())
+        elif response.status_code == 403:
+            print("Forbidden: Buying power or shares are not sufficient.")
+        elif response.status_code == 422:
+            print("Unprocessable: Input parameters are not recognized.")
+        else:
+            print("Error:", response.status_code, response.text)
+        
     def get_trading_data(self, symbol ,start_date, end_date, feed):
         
         page_token = 0

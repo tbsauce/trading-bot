@@ -34,17 +34,6 @@ sell_up_values = []
 
 for i in range(len(data['c'])):
     print(data['t'].iloc[i])
-    closing = data['c'].iloc[i]
-    upper = data_donchian_channels['upper_band'].iloc[i]
-    middle = data_donchian_channels['middle_band'].iloc[i]
-
-    good_to_buy = (upper <= closing and 
-        data_volume['volume_bars'].iloc[i] > 0 and data_volume['volume_bars'].iloc[i -1] > 0 and
-        data_vma['volume_ma'].iloc[i] < data_volume['volume_bars'].iloc[i] and
-        data_vma['volume_ma'].iloc[i-1] < data_volume['volume_bars'].iloc[i-1] and
-        data_volume['volume_bars'].iloc[i] > data_volume['volume_bars'].iloc[i-1] and 
-        data_williams_r['WilliamsR'].iloc[i] >= -20)
-
 
     if buy and good_to_buy:
         sell_up = closing + (closing * 0.05)
