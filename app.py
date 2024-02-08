@@ -5,7 +5,7 @@ bot = Bot()
 
 symbol = "TSLA"
 time_frame = "5Min"
-start_date = "2024-01-01T09:00:00Z"
+start_date = "2023-01-01T09:00:00Z"
 end_date = "2024-01-30T11:30:00Z"
 feed = "iex"
 
@@ -33,7 +33,17 @@ sell_down_values = []
 sell_up_values = []
 
 for i in range(len(data['c'])):
-    print(data['t'].iloc[i])
+    closing = data['c'].iloc[i]
+    upper = data_donchian_channels['upper_band'].iloc[i]
+    middle = data_donchian_channels['middle_band'].iloc[i]
+
+    good_to_buy = (upper <= closing and 
+        data_volume['volume_bars'].iloc[i] > 0 and data_volume['volume_bars'].iloc[i -1] > 0 and
+        data_vma['volume_ma'].iloc[i] < data_volume['volume_bars'].iloc[i] and
+        data_vma['volume_ma'].iloc[i-1] < data_volume['volume_bars'].iloc[i-1] and
+        data_volume['volume_bars'].iloc[i] > data_volume['volume_bars'].iloc[i-1] and 
+        data_williams_r['WilliamsR'].iloc[i] >= -20)
+
 
     if buy and good_to_buy:
         sell_up = closing + (closing * 0.05)
