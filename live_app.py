@@ -3,49 +3,88 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 from datetime import datetime, timedelta
+import pandas as pd
+
+import json
 
 bot = Bot()
 
 symbol = "TSLA"
-time_frame = "5Min"
+time_frame = "1Min"
 feed = "iex"
 
 #Get Current Date
-start_date = datetime.now().date()
-end_date = start_date + timedelta(days=1)
+end_date = datetime.now().date()
+start_date = end_date + timedelta(days=-1)
 #convert to desired format
 start_date = start_date.strftime('%Y-%m-%dT00:00:00Z')
 end_date = end_date.strftime('%Y-%m-%dT00:00:00Z')
 
 trade = 0
 buy = 1
+
+data = pd.DataFrame() 
 while True:
 
     # Bars data
-    data = bot.get_bars_data(symbol, time_frame, start_date, end_date, feed)
-    # Donchian Channel
-    data_donchian_channels = bot.get_donchian_channel(96, symbol, time_frame, start_date, end_date, feed)
+    new_data = bot.get_live_trade_data(symbol, feed)
+
+    data = pd.concat([data, new_data], ignore_index=True)
+
+    #Save Start Date
+    middle_date = start_date
+
+    #Calculate New Start Date
+    days_to_add = 5
+    original_date = datetime.fromisoformat(start_date)
+    start_date = original_date - timedelta(days=days_to_add)
+    start_date = start_date.replace(tzinfo=None).isoformat() + "Z"
+
+    #Get Historical Data
+    df = bot.get_bars_data(symbol, time_frame, start_date, end_date, feed)
+
+    df = pd.concat([df, data], ignore_index=True)
+
+    #Donchian Channel
+    df['upper_band'] = df['h'].rolling(window=480).max().shift(1)
+    df['lower_band'] = df['l'].rolling(window=480).min().shift(1)
+    df['middle_band'] = ((df['upper_band'] + df['lower_band']) / 2)
+
+    data_donchian_channels = df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
 
     # Volume Bars
-    data_volume = bot.get_volume(data)
 
+    df['volume_bars'] = df['v']
+    df.loc[df['c'] < df['c'].shift(1), 'volume_bars'] *= -1
+    data_volume = df
     # Volume MA
-    data_vma = bot.get_volume_moving_average(30, symbol, time_frame, start_date, end_date, feed)
+
+    df['volume_ma'] = df['v'].rolling(window=50).mean()
+
+    data_volume =  df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
 
     # Williams %R 
-    data_williams_r = bot.get_williams_r(200, symbol, time_frame, start_date, end_date, feed)
+    df['highest_high'] = df['h'].rolling(window=200).max()
+    df['lowest_low'] = df['l'].rolling(window=200).min()
+    williams_r = ((df['highest_high']  - df['c']) / (df['highest_high']  - df['lowest_low'])) * -100
+
+    df['WilliamsR'] = williams_r
+
+    data_williams_r = df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
 
     #Buying Strategy
-    closing = data['c'].iloc[-1]
-    print(f"Closing -> {closing} at Time -> {data['t'].iloc[-1]}")
+    closing = data.iloc[-1]["bars"]["c"]
+    date = data.iloc[-1]["bars"]["t"]
+    print(f"Closing -> {closing} at Time -> {date}")
     upper = data_donchian_channels['upper_band'].iloc[-1]
     middle = data_donchian_channels['middle_band'].iloc[-1]
+    sell_down = sell_up = data_donchian_channels['middle_band'].iloc[0]
 
     good_to_buy = (upper <= closing and 
-        data_volume['volume_bars'].iloc[-1] > 0 and data_volume['volume_bars'].iloc[i -1] > 0 and
+        data_volume['volume_bars'].iloc[-1] > 0 and data_volume['volume_bars'].iloc[-2] > 0 and
         data_vma['volume_ma'].iloc[-1] < data_volume['volume_bars'].iloc[-1] and
-        data_vma['volume_ma'].iloc[i-1] < data_volume['volume_bars'].iloc[i-1] and
-        data_volume['volume_bars'].iloc[-1] > data_volume['volume_bars'].iloc[i-1] and 
+        data_vma['volume_ma'].iloc[i-1] < data_volume['volume_bars'].iloc[-2] and
+        data_volume['volume_bars'].iloc[-1] > data_volume['volume_bars'].iloc[-2] and 
         data_williams_r['WilliamsR'].iloc[-1] >= -20)
 
 
@@ -64,6 +103,7 @@ while True:
     #update stop loss here
     if sell_down < middle:
         # bot.update_stock(id, middle)
+        print("update")
+    
 
-    # Every 5min 
-    time.sleep(30 * 2 * 5)
+    time.sleep(60)

@@ -67,6 +67,17 @@ class Bot:
             print("Unprocessable: Input parameters are not recognized.")
         else:
             print("Error:", response.status_code, response.text)
+
+    
+    def get_live_trade_data(self, symbol, feed):
+
+        url = f"https://data.alpaca.markets/v2/stocks/bars/latest?symbols={symbol}&feed={feed}"
+
+        response = requests.get(url, headers=self.headers)
+
+        data = response.json()
+
+        return pd.DataFrame(data)
         
     def get_trading_data(self, symbol ,start_date, end_date, feed):
         
