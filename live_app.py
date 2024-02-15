@@ -36,7 +36,8 @@ while True:
 
     #Calculate New Start Date
     days_to_add = 5
-    original_date = datetime.fromisoformat(start_date)
+    
+    original_date = datetime.strptime(start_date, '%Y-%m-%dT%H:%M:%SZ')
     start_date = original_date - timedelta(days=days_to_add)
     start_date = start_date.replace(tzinfo=None).isoformat() + "Z"
 
@@ -57,11 +58,12 @@ while True:
     df['volume_bars'] = df['v']
     df.loc[df['c'] < df['c'].shift(1), 'volume_bars'] *= -1
     data_volume = df
-    # Volume MA
 
+    # Volume MA
+    
     df['volume_ma'] = df['v'].rolling(window=50).mean()
 
-    data_volume =  df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
+    data_vma =  df[(df['t'] >= middle_date) & (df['t'] <= end_date)]
 
     # Williams %R 
     df['highest_high'] = df['h'].rolling(window=200).max()
@@ -99,11 +101,14 @@ while True:
         buy = 0
     elif not buy and closing <= sell_down:
         buy = 1
-
+        print(f"Sold -> {closing}")
+        
     #update stop loss here
     if sell_down < middle:
         # bot.update_stock(id, middle)
-        print("update")
+        print(f"sellDown -> {sell_down}, middle -> {middle}")
+        sell_down = middle
+    print(sell_down)
     
 
     time.sleep(60)
