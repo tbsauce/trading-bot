@@ -1,5 +1,8 @@
-# trading-bot
+# Intsall
 
-# To do
-
-
+````
+pip install requests
+pip install python-dotenv
+pip install pandas
+pip install matplotlib
+```
