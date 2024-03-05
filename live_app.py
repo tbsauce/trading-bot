@@ -80,7 +80,7 @@ while True:
     print(f"Closing -> {closing} at Time -> {date}")
     upper = data_donchian_channels['upper_band'].iloc[-1]
     middle = data_donchian_channels['middle_band'].iloc[-1]
-    sell_down = sell_up = data_donchian_channels['middle_band'].iloc[0]
+    sell_down = sell_up = data_donchian_channels['middle_band'].iloc[-1]
 
     good_to_buy = (upper <= closing and 
         data_volume['volume_bars'].iloc[-1] > 0 and data_volume['volume_bars'].iloc[-2] > 0 and
@@ -89,6 +89,13 @@ while True:
         data_volume['volume_bars'].iloc[-1] > data_volume['volume_bars'].iloc[-2] and 
         data_williams_r['WilliamsR'].iloc[-1] >= -20)
 
+
+    #update stop loss here
+    if sell_down < middle:
+        # bot.update_stock(id, middle)
+        sell_down = middle
+    
+    print(f"sellDown -> {sell_down}, middle -> {middle}, closing -> {closing}")
 
     #here buy what but first chck if theres any bought stocks
     if buy and good_to_buy:
@@ -103,12 +110,7 @@ while True:
         buy = 1
         print(f"Sold -> {closing}")
         
-    #update stop loss here
-    if sell_down < middle:
-        # bot.update_stock(id, middle)
-        print(f"sellDown -> {sell_down}, middle -> {middle}")
-        sell_down = middle
-    print(sell_down)
+    
     
 
     time.sleep(60)
