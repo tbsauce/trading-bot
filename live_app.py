@@ -22,6 +22,7 @@ end_date = end_date.strftime('%Y-%m-%dT00:00:00Z')
 
 trade = 0
 buy = 1
+trade_id = -1
 
 data = pd.DataFrame() 
 while True:
@@ -91,8 +92,8 @@ while True:
 
 
     #update stop loss here
-    if sell_down < middle:
-        # bot.update_stock(id, middle)
+    if sell_down < middle and trade_id != -1:
+        bot.update_stock(trade_id, middle)
         sell_down = middle
     
     print(f"sellDown -> {sell_down}, middle -> {middle}, closing -> {closing}")
@@ -103,11 +104,11 @@ while True:
         #get qty of stocks for all the balance money
         qty = math.floor(bot.get_account_balance() / closing)
         print(f"qty -> {qty}")
-        #bot.order_stock(symbol, qty, "buy", middle)
-        # the one vefore shoudl return id
+        trade_id = bot.order_stock(symbol, qty, "buy", middle)
         buy = 0
     elif not buy and closing <= sell_down:
         buy = 1
+        trade_id = -1
         print(f"Sold -> {closing}")
         
     
