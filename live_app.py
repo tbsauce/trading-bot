@@ -78,7 +78,6 @@ while True:
     #Buying Strategy
     closing = data.iloc[-1]["bars"]["c"]
     date = data.iloc[-1]["bars"]["t"]
-    print(f"Closing -> {closing} at Time -> {date}")
     upper = data_donchian_channels['upper_band'].iloc[-1]
     middle = data_donchian_channels['middle_band'].iloc[-1]
     sell_down = sell_up = data_donchian_channels['middle_band'].iloc[-1]
@@ -96,7 +95,8 @@ while True:
         bot.update_stock(trade_id, middle)
         sell_down = middle
     
-    print(f"sellDown -> {sell_down}, middle -> {middle}, closing -> {closing}")
+    print(f"Closing -> {closing} at Time -> {date}")
+    print(f"sellDown -> {sell_down}")
 
     #here buy what but first chck if theres any bought stocks
     if buy and good_to_buy:
