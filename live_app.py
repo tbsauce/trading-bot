@@ -1,4 +1,5 @@
 from bot import Bot
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import time
@@ -23,6 +24,7 @@ end_date = end_date.strftime('%Y-%m-%dT00:00:00Z')
 trade = 0
 buy = 1
 trade_id = -1
+qty = -1
 
 data = pd.DataFrame() 
 while True:
@@ -92,21 +94,21 @@ while True:
 
     #update stop loss here
     if sell_down < middle and trade_id != -1:
-        bot.update_stock(trade_id, middle)
         sell_down = middle
     
     print(f"Closing -> {closing} at Time -> {date}")
     print(f"sellDown -> {sell_down}")
 
-    #here buy what but first chck if theres any bought stocks
+    #here buy what but first chck if theres any bought stocks 
     if buy and good_to_buy:
         sell_down = middle
         #get qty of stocks for all the balance money
-        qty = math.floor(bot.get_account_balance() / closing)
+        qty = math.floor(bot.get_account_balance() / closing ) / 2
         print(f"qty -> {qty}")
-        trade_id = bot.order_stock(symbol, qty, "buy", middle)
+        trade_id = bot.order_stock(symbol, qty, "buy", middle) 
         buy = 0
     elif not buy and closing <= sell_down:
+        bot.sell_stock(symbol, qty, "sell")
         buy = 1
         trade_id = -1
         print(f"Sold -> {closing}")

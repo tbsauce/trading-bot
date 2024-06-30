@@ -5,7 +5,7 @@ bot = Bot()
 
 symbol = "TSLA"
 time_frame = "1Min"
-start_date = "2023-01-01T09:00:00Z"
+start_date = "2024-01-01T09:00:00Z"
 end_date = "2024-01-30T11:30:00Z"
 feed = "iex"
 

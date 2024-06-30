@@ -21,26 +21,25 @@ class Bot:
 
         response = requests.get(url, headers=self.headers)
 
-        return response.json()['portfolio_value']
+        return float(response.json()['portfolio_value'])
 
     def order_stock(self, symbol, qty, side, stop_price):
         url = "https://paper-api.alpaca.markets/v2/orders"
 
-        order_params = {
-            "symbol": symbol,
-            "qty": qty,  # Number of shares to trade
+        payload = {
             "side": side,
-            "type": "market",  # Immediate market order
-            "stop_price": stop_price,  # Stop price for the stop-loss order
-            "time_in_force": "gtc",  # Good 'til Canceled
+            "type": "stop",
+            "time_in_force": "gtc",
+            "symbol": symbol,
+            "qty": qty,
+            "stop_price": int(float(stop_price))
         }
-
-        response = requests.post(url, json=order_params, headers=self.headers)
-
+        response = requests.post(url, json=payload, headers=self.headers)
+        
         # Check the response
         if response.status_code == 200:
             print("Order placed successfully.")
-            print(response.json())
+            return response.json()["id"]
         elif response.status_code == 403:
             print("Forbidden: Buying power or shares are not sufficient.")
         elif response.status_code == 422:
@@ -48,19 +47,22 @@ class Bot:
         else:
             print("Error:", response.status_code, response.text)
     
-    def update_stock(self, id, stop_price):
-        url = f"https://paper-api.alpaca.markets/v2/orders/{id}"
-
-        order_params = {
-            "stop_price": stop_price,  # Stop price for the stop-loss order
+    def sell_stock(self, symbol, qty, side):
+        url = f"https://paper-api.alpaca.markets/v2/orders"
+        
+        payload = {
+            "side": side,
+            "type": "market",
+            "time_in_force": "gtc",
+            "symbol": symbol,
+            "qty": qty
         }
-
-        response = requests.post(url, json=order_params, headers=self.headers)
+        print(payload)
+        response = requests.post(url, json=payload, headers=self.headers)
 
         # Check the response
         if response.status_code == 200:
-            print("Order placed successfully.")
-            print(response.json())
+            print("Sold Stock")
         elif response.status_code == 403:
             print("Forbidden: Buying power or shares are not sufficient.")
         elif response.status_code == 422:
