@@ -1,6 +1,45 @@
+import sys
+import time
 from utils import * 
 
-def main():
+#Main live trader
+def live_trading():
+
+    print(get_account())
+    symbol = "TSLA"
+    timeframe = "1H"
+    feed="iex"
+    start_date = (datetime.now() - timedelta(days=300)).date()
+
+    #TODO
+    # Optimize dataframe alwys getting the 300 days ago
+    # Append dataframe to get history of what happened before the 300days
+    # Make indicators calculate only whats necessery
+    # Optmize speed basicly
+    # Make the buy/sell orders happen
+    while True:
+        data_frame = pd.DataFrame()
+        data_frame = get_bars_data(data_frame, symbol, timeframe, start_date, feed)
+        data_frame = get_donchian_channel(data_frame, 5, 4)
+        data_frame = get_volume(data_frame)
+        data_frame = get_volume_moving_average(data_frame, 45)
+        data_frame = get_williams_r(data_frame, 20)
+        data_frame = live_strategy(data_frame, 20, 40)
+        stats = calculate_trade_stats(data_frame)
+
+        print("Total Profit/Loss:", stats['total_profit_loss'])
+        print("Number of Trades:", stats['num_trades'])
+        print("Winning Trades:", stats['winning_trades'])
+        print("Value of Winning Trades:", stats['value_of_winning_trades'])
+        print("Losing Trades:", stats['losing_trades'])
+        print("Value of Losing Trades:", stats['value_of_loosing_trades'])
+        print("Winning Percentage:", stats['winning_percentage'], "%")
+        print("Loosing Percentage:", stats['loosing_percentage'], "%")
+        time.sleep(60)
+
+
+# Function to test strategy with historical data
+def backtesting():
 
     symbol = "TSLA"
     timeframe = "1H"
@@ -15,7 +54,6 @@ def main():
     data_frame = get_williams_r(data_frame, 20)
     data_frame = strategy(data_frame, 20, 40)
     stats = calculate_trade_stats(data_frame)
-
     
     print("Total Profit/Loss:", stats['total_profit_loss'])
     print("Number of Trades:", stats['num_trades'])
@@ -27,7 +65,7 @@ def main():
     print("Loosing Percentage:", stats['loosing_percentage'], "%")
 
 # Funcion to get the best parameters for the strategy
-def main_optimization():
+def backtesting_optimization():
 
     symbol = "TSLA"
     timeframe = "1H"
@@ -91,6 +129,22 @@ def main_optimization():
     print(f"  Value of Losing Trades: {best_stats['value_of_loosing_trades']}")
     print(f"  Winning Percentage: {best_stats['winning_percentage']}%")
     print(f"  Losing Percentage: {best_stats['losing_percentage']}%")
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python script.py [live|backtest|optimize]")
+        return
+    
+    mode = sys.argv[1].lower()
+    
+    if mode == "live":
+        live_trading()
+    elif mode == "backtest":
+        backtesting()
+    elif mode == "optimize":
+        backtesting_optimization()
+    else:
+        print("Invalid mode. Use: live, backtest, or optimize")
 
 if __name__ == "__main__":
     main()
