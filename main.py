@@ -5,7 +5,6 @@ from utils import *
 #Main live trader
 def live_trading():
 
-    print(get_account())
     symbol = "TSLA"
     timeframe = "1H"
     feed="iex"
@@ -24,6 +23,9 @@ def live_trading():
         data_frame = get_volume(data_frame)
         data_frame = get_volume_moving_average(data_frame, 45)
         data_frame = get_williams_r(data_frame, 20)
+        #TODO
+        # trade actuve logic doesn work anymore like needs t change in this strategy 
+
         data_frame = live_strategy(data_frame, 20, 40)
         stats = calculate_trade_stats(data_frame)
 

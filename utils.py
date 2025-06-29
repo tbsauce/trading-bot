@@ -129,7 +129,7 @@ def live_strategy(data_frame, stop_loss_percent, stop_gain_percent):
         stop_loss_price = entry_price * (1 - stop_loss_percent / 100)
         stop_gain_price = entry_price * (1 + stop_gain_percent / 100)
         # Initialize row as 'BUY'/1
-        data_frame.at[index, 'Trade Action'] = entry_price
+        data_frame.at[data_frame.index[-1], 'Trade Action'] = entry_price
 
     # Exit Condition and Initialize rows as 'SELL'/-1
     elif trade_active:
