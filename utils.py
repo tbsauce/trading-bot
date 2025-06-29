@@ -1,189 +1,36 @@
-import requests
-import configparser
 import pandas as pd
-from datetime import datetime, timedelta
-import matplotlib.pyplot as plt
-import numpy as np
-
-from itertools import product
-
-# Load from config.ini
-config = configparser.ConfigParser()
-config.read("config.ini")
-
-api_key = config["keys"]["api_key"]
-api_secret = config["keys"]["api_secret"]
-base_url = config["urls"]["paper-trading"]  
-
-# Initialize Alpaca Headers
-headers = {
-    "accept": "application/json",
-    "APCA-API-KEY-ID": api_key,
-    "APCA-API-SECRET-KEY": api_secret 
-}
-
-def get_account():
-
-    url = f"{base_url}/v2/account"
-
-    response = requests.get(url, headers=headers)
-
-    return response.json()
-
-def order_stock(payload):
-
-    url = f"{base_url}/v2/orders"
-
-    response = requests.post(url, json=payload, headers=self.headers)
-
-def sell_stock(symbol, qty):
-
-    url = f"{base_url}/v2/orders"
-    
-    payload = {
-        "side": "sell",
-        "type": "market",
-        "time_in_force": "gtc",
-        "symbol": symbol,
-        "qty": qty
-    }
-
-    response = requests.post(url, json=payload, headers=headers)
-
-def get_bars_data(data_frame, symbol ,time_frame, start_date, feed):
-    try:
-    
-        next_token = None
-        
-        # While to get all pages with data
-        while True:
-            # URL for the API request
-            url = f"https://data.alpaca.markets/v2/stocks/bars?symbols={symbol}&timeframe={time_frame}&start={start_date}&limit=1000&adjustment=raw&feed={feed}&sort=asc"
-            if next_token:
-                url += f"&page_token={next_token}"
-                
-            # make request to API
-            response = requests.get(url, headers=headers).json()
-            df = pd.DataFrame(response["bars"]["TSLA"])
-            data_frame = pd.concat([data_frame, df], ignore_index=True)
-        
-
-            # If there is no next_token leave loop
-            next_token = response['next_page_token']
-            if not next_token:
-                break
-
-    except:
-        print("unexpected error getting bars from API")
-    
-    return data_frame.drop_duplicates()
 
 def get_donchian_channel(data_frame, n_period, offset):
 
-    data_frame['lower'] = data_frame['l'].rolling(window=n_period).min().shift(offset)
-    data_frame['upper'] = data_frame['h'].rolling(window=n_period).max().shift(offset)
+    data_frame['lower'] = data_frame['low'].rolling(window=n_period).min().shift(offset)
+    data_frame['upper'] = data_frame['high'].rolling(window=n_period).max().shift(offset)
     data_frame['middle'] = ((data_frame['upper'] + data_frame['lower']) / 2).shift(offset)
 
     return data_frame
 
 def get_volume(data_frame):
 
-    data_frame['volume_bars'] = data_frame['v']
-    data_frame.loc[data_frame['c'] < data_frame['c'].shift(1), 'volume_bars'] *= -1
+    data_frame['volume_bars'] = data_frame['volume']
+    data_frame.loc[data_frame['close'] < data_frame['close'].shift(1), 'volume_bars'] *= -1
     
     return data_frame
 
 def get_volume_moving_average(data_frame, n_period):
 
-    data_frame['volume_ma'] = data_frame['v'].rolling(window=n_period).mean()
+    data_frame['volume_ma'] = data_frame['volume'].rolling(window=n_period).mean()
 
     return data_frame
 
 def get_williams_r(data_frame, n_period):
 
-    highest = data_frame['h'].rolling(window=n_period).max()
-    lowest = data_frame['l'].rolling(window=n_period).min()
+    highest = data_frame['high'].rolling(window=n_period).max()
+    lowest = data_frame['low'].rolling(window=n_period).min()
 
-    data_frame['WilliamsR'] = ((highest - data_frame['c']) / (highest - lowest)) * -100
+    data_frame['WilliamsR'] = ((highest - data_frame['close']) / (highest - lowest)) * -100
     
     return data_frame
 
-def live_strategy(data_frame, stop_loss_percent, stop_gain_percent):
-    
-    # Process only last line 
-    row = data_frame.iloc[-1]
 
-    # Initialize variables
-    trade_active = False
-    entry_price = None
-    stop_loss_price = None
-
-    # Initialize all rows as 'HOLD'/0
-    data_frame['Trade Action'] = 0.0
-    
-    # Entry Condition
-    if( not trade_active and row['c'] >= row['upper'] and row['WilliamsR'] >= -20 and row['v'] > row['volume_ma'] and row['volume_bars'] > 0):
-        
-        trade_active = True
-        entry_price = row['c']
-        stop_loss_price = entry_price * (1 - stop_loss_percent / 100)
-        stop_gain_price = entry_price * (1 + stop_gain_percent / 100)
-        # Initialize row as 'BUY'/1
-        data_frame.at[data_frame.index[-1], 'Trade Action'] = entry_price
-
-    # Exit Condition and Initialize rows as 'SELL'/-1
-    elif trade_active:
-        if row['c'] <= stop_loss_price:
-            trade_active = False
-            data_frame.at[index, 'Trade Action'] = -1 * stop_loss_price
-
-        elif row['c'] >= stop_gain_price:
-            trade_active = False
-            data_frame.at[index, 'Trade Action'] = -1 * stop_gain_price
-
-        elif row['c'] < row['middle']:
-            trade_active = False
-            data_frame.at[index, 'Trade Action'] = -1 * row['middle']
-
-    return data_frame
-
-def strategy(data_frame, stop_loss_percent, stop_gain_percent):
-
-    # Initialize variables
-    trade_active = False
-    entry_price = None
-    stop_loss_price = None
-
-    # Initialize all rows as 'HOLD'/0
-    data_frame['Trade Action'] = 0.0
-
-    for index, row in data_frame.iterrows():
-        # Entry Condition
-        if( not trade_active and row['c'] >= row['upper'] and row['WilliamsR'] >= -20 and row['v'] > row['volume_ma'] and row['volume_bars'] > 0):
-            
-            trade_active = True
-            entry_price = row['c']
-            stop_loss_price = entry_price * (1 - stop_loss_percent / 100)
-            stop_gain_price = entry_price * (1 + stop_gain_percent / 100)
-            # Initialize row as 'BUY'/1
-            data_frame.at[index, 'Trade Action'] = entry_price
-
-        # Exit Condition and Initialize rows as 'SELL'/-1
-        elif trade_active:
-            if row['c'] <= stop_loss_price:
-                trade_active = False
-                data_frame.at[index, 'Trade Action'] = -1 * stop_loss_price
-
-            elif row['c'] >= stop_gain_price:
-                trade_active = False
-                data_frame.at[index, 'Trade Action'] = -1 * stop_gain_price
-    
-            elif row['c'] < row['middle']:
-                trade_active = False
-                data_frame.at[index, 'Trade Action'] = -1 * row['middle']
-
-
-    return data_frame
 
 def calculate_trade_stats(data_frame):
 
